@@ -1,14 +1,15 @@
+
 # Reddit User Persona Generator
 
-A Python script that scrapes Reddit user profiles, analyzes their posts and comments, and generates comprehensive user personas using AI analysis.
+A Python script that scrapes Reddit user profiles, analyzes their posts and comments, and generates comprehensive user personas using local LLMs through **Ollama**.
 
 ## Features
 
-- **Reddit Scraping**: Extracts posts and comments from any public Reddit user
-- **AI Analysis**: Uses OpenAI's GPT-4 to analyze content and generate insights
-- **Comprehensive Personas**: Creates detailed user profiles including demographics, personality traits, motivations, behaviors, and goals
-- **Citation System**: Provides specific citations for each piece of persona information
-- **Clean Output**: Generates formatted text files with complete persona analysis
+- **Reddit Scraping**: Extracts posts and comments from any public Reddit user  
+- **LLM Analysis with Ollama**: Uses models like `mistral`, `llama3.2`, and `llama3.1` via Ollama to analyze content  
+- **Comprehensive Personas**: Creates detailed user profiles including demographics, personality traits, motivations, behaviors, and goals  
+- **Citation System**: Provides specific citations for each piece of persona information  
+- **Clean Output**: Generates formatted text files with complete persona analysis  
 
 ## Sample Output
 
@@ -26,7 +27,7 @@ The script generates personas similar to the example provided, including:
 
 - Python 3.7+
 - Reddit API credentials
-- OpenAI API key
+- Ollama installed with any LLM models (mistral, llama3.1, llama3.2)
 
 ## Installation
 
@@ -41,169 +42,170 @@ The script generates personas similar to the example provided, including:
    pip install -r requirements.txt
    ```
 
-3. **Set up API credentials:**
-   
-   **Reddit API Setup:**
+3. **Set up Reddit API credentials:**
    - Go to https://www.reddit.com/prefs/apps
    - Click "Create App" or "Create Another App"
    - Choose "script" as the app type
    - Note down your client ID and client secret
-   
-   **OpenAI API Setup:**
-   - Go to https://platform.openai.com/api-keys
-   - Create a new API key
-   - Copy the key (you won't be able to see it again)
 
-4. **Configure environment variables:**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` with your actual credentials:
+4. **Create `.env` file with your actual credentials:**
    ```
    REDDIT_CLIENT_ID=your_reddit_client_id
    REDDIT_CLIENT_SECRET=your_reddit_client_secret
    REDDIT_USER_AGENT=PersonaGenerator/1.0
-   OPENAI_API_KEY=your_openai_api_key
    ```
+
+## Ollama Setup
+
+1. **Install Ollama**:  
+   Download it from https://ollama.ai/download for your OS
+
+2. **Download required models**:
+   ```bash
+   ollama pull mistral
+   ollama pull llama3.2
+   ollama pull llama3.1
+   ```
+
+3. **Start Ollama server** (if not already running):
+   ```bash
+   ollama serve
+   ```
+
+---
 
 ## Usage
 
 Run the script with a Reddit username:
 
 ```bash
+# Default (mistral)
 python reddit_persona_generator.py <username>
+
+# Specify a different model
+python reddit_persona_generator.py <username> llama3.2
+python reddit_persona_generator.py <username> llama3.1
 ```
 
 **Examples:**
 ```bash
 python reddit_persona_generator.py kojied
-python reddit_persona_generator.py Hungry-Move-6603
+python reddit_persona_generator.py Hungry-Move-6603 llama3.2
 ```
 
 The script will:
-1. Scrape the user's posts and comments
-2. Analyze the content using AI
-3. Generate a comprehensive persona
-4. Save the output to `<username>_persona.txt`
-
-## Sample Commands for Project Users
-
-```bash
-# Generate persona for kojied
-python reddit_persona_generator.py kojied
-
-# Generate persona for Hungry-Move-6603
-python reddit_persona_generator.py Hungry-Move-6603
-```
+1. Scrape the user's posts and comments  
+2. Analyze the content using the chosen LLM model via Ollama  
+3. Generate a comprehensive persona  
+4. Save the output to `<username>_persona_<model>.txt`
 
 ## Output Format
 
 The script generates a detailed text file with the following sections:
 
-- **Demographics**: Age, occupation, location, relationship status, user tier, archetype
-- **Personality Traits**: Scored on 1-10 scales for various personality dimensions
-- **Motivations**: Rated importance of different factors (convenience, wellness, etc.)
-- **Behavior & Habits**: Observed behavioral patterns
-- **Frustrations**: Common pain points and complaints
-- **Goals & Needs**: User objectives and requirements
-- **Key Quote**: Representative statement from the user
-- **Citations**: Specific post/comment references for each piece of information
+- **Demographics**: Age, occupation, location, relationship status, user tier, archetype  
+- **Personality Traits**: Scored on 1–10 scales for various personality dimensions  
+- **Motivations**: Rated importance of factors like convenience, wellness, etc.  
+- **Behavior & Habits**: Observed behavioral patterns  
+- **Frustrations**: Common pain points  
+- **Goals & Needs**: User objectives and aspirations  
+- **Key Quote**: Representative user statement  
+- **Citations**: Reddit post/comment references for each attribute  
 
 ## Project Structure
 
 ```
 reddit-persona-generator/
-├── reddit_persona_generator.py    # Main script
-├── requirements.txt               # Python dependencies
-├── .env.example                  # Environment template
-├── README.md                     # This file
-├── kojied_persona.txt            # Sample output (generated)
-└── Hungry-Move-6603_persona.txt  # Sample output (generated)
+├── reddit_persona_generator.py     # Main script
+├── requirements.txt                # Python dependencies
+├── .env.example                    # Environment template
+├── README.md                       # This file
+├── kojied_persona_mistral.txt      # Sample output (generated)
+└── Hungry-Move-6603_persona_llama3.2.txt  # Sample output (generated)
 ```
 
 ## Technical Details
 
 ### Architecture
 
-The script consists of four main components:
-
-1. **RedditScraper**: Handles Reddit API interactions using PRAW
-2. **PersonaAnalyzer**: Processes content using OpenAI's GPT-4
-3. **PersonaFormatter**: Formats output into readable text
-4. **Data Models**: Structured data classes for personas and citations
+1. **RedditScraper** – Uses PRAW to fetch user posts/comments  
+2. **PersonaAnalyzer** – Sends content to the Ollama API for model analysis  
+3. **PersonaFormatter** – Converts analysis into a readable text persona  
+4. **Data Models** – Structured classes for personas and citations  
 
 ### AI Analysis Process
 
-The script uses GPT-4 to analyze Reddit content and extract:
-- Demographic information from contextual clues
-- Personality traits based on communication patterns
-- Motivations inferred from expressed preferences
-- Behavioral patterns from posting habits
-- Frustrations from complaint patterns
-- Goals from expressed desires and needs
+The selected Ollama LLM model analyzes Reddit content to extract:
+- Demographics from context clues  
+- Personality traits based on communication style  
+- Motivations from stated preferences  
+- Behavioral patterns from posting habits  
+- Frustrations from complaints or rants  
+- Goals from expressed desires or needs  
 
 ### Citation System
 
-Every piece of persona information is backed by specific citations that include:
-- Post/comment ID
-- Content type (post or comment)
-- Subreddit context
-- Timestamp
-- Direct URL to the source
-- Relevant content excerpt
+Each piece of information is supported by:
+- Post or comment ID  
+- Type (post/comment)  
+- Subreddit context  
+- Date  
+- URL to the original source  
+- A snippet of the referenced content  
+
+---
 
 ## Error Handling
 
-The script includes comprehensive error handling for:
-- Invalid usernames
-- Private/suspended accounts
-- API rate limits
-- Network connectivity issues
-- Missing API credentials
+The script handles:
+- Invalid usernames  
+- Private or suspended accounts  
+- API rate limits  
+- Network errors  
+- Missing environment variables  
 
-## Rate Limiting
-
-The script respects Reddit's API rate limits and includes appropriate delays. For large-scale analysis, consider implementing additional rate limiting measures.
+---
 
 ## Privacy and Ethics
 
-This tool is designed for research and analysis purposes. Please use responsibly and respect user privacy:
-- Only analyze public Reddit content
-- Do not use for harassment or stalking
-- Respect Reddit's terms of service
-- Consider the ethical implications of persona analysis
+Use this tool responsibly. Respect user privacy:
+
+- Only analyze **public Reddit content**  
+- Don’t use for profiling, stalking, or unethical targeting  
+- Follow [Reddit API Terms](https://www.reddit.com/wiki/api-terms)  
+
+---
 
 ## Troubleshooting
 
-### Common Issues
+**Common Issues:**
 
-1. **"Invalid credentials" error**: Check your Reddit API credentials in `.env`
-2. **"User not found" error**: Verify the username is correct and the account exists
-3. **"No content found" error**: User may have no posts/comments or a private profile
-4. **OpenAI API errors**: Verify your API key and check your usage limits
+1. **Invalid credentials** – Check `.env`  
+2. **User not found** – Confirm Reddit username  
+3. **No content** – Might be a private/restricted account  
+4. **Ollama not responding** – Ensure `ollama serve` is running  
 
-### Debug Mode
-
-To enable verbose output for debugging:
+**Debug Mode:**
 ```bash
 python reddit_persona_generator.py <username> --debug
 ```
 
+---
+
 ## Dependencies
 
-- **praw**: Reddit API wrapper for Python
-- **openai**: OpenAI API client
-- **python-dotenv**: Environment variable management
+- `praw` – Reddit API wrapper  
+- `ollama` – Local LLM interface  
+- `requests`, `python-dotenv` – Utility libraries
+
+---
 
 ## Contributing
 
-Feel free to submit issues, feature requests, or pull requests to improve the script.
+Feel free to open issues, suggest improvements, or submit pull requests.
+
+---
 
 ## License
 
-This project is provided as-is for educational and research purposes.
-
-## API Costs
-
-Note that this script uses OpenAI's GPT-4 API, which incurs costs based on usage. A typical persona generation uses approximately 2000-4000 tokens, costing around $0.06-$0.12 per analysis.
+This project is for educational and research purposes only.
