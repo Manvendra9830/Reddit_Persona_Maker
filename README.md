@@ -143,15 +143,6 @@ The selected Ollama LLM model analyzes Reddit content to extract:
 - Frustrations from complaints or rants  
 - Goals from expressed desires or needs  
 
-### Citation System
-
-Each piece of information is supported by:
-- Post or comment ID  
-- Type (post/comment)  
-- Subreddit context  
-- Date  
-- URL to the original source  
-- A snippet of the referenced content  
 
 ---
 
