@@ -4,45 +4,43 @@ USER PERSONA: LIFE-OPPORTUNITY-386
 
 DEMOGRAPHICS
 --------------------
-Age: 25-30
-Occupation: Student or working professional
-Status: Unknown
-Location: Unknown, possibly in India due to the mention of XLRI
-
-Tier: Early Adopter
-Archetype: The Explorer
+Age: 20-30
+Status: Single (no mention of being in a relationship)
+Tier: Tier 2-3
+Archetype: Self-Improvement Enthusiast
 
 PERSONALITY TRAITS
 --------------------
 Introvert/Extrovert: Introvert (3/10)
-Intuition/Sensing: Sensing (6/10)
-Feeling/Thinking: Feeling (4/10)
-Perceiving/Judging: Perceiving (5/10)
+Intuition/Sensing: Intuition (4/10)
+Feeling/Thinking: Feeling (3/10)
+Perceiving/Judging: Perceiving (2/10)
 
 MOTIVATIONS
 --------------------
 Convenience: 4/10
-Wellness: 3/10
-Speed: 9/10
-Preferences: 8/10
-Comfort: 5/10
-Dietary Needs: 2/10
+Wellness: 2/10
+Speed: 5/10
+Preferences: 5/10
+Comfort: 3/10
+Dietary Needs: 1/10
 
 BEHAVIOR & HABITS
 --------------------
-• Spends a lot of time on online forums (Reddit) to discuss CAT preparations and share knowledge
-• Hosts Google Meets or Zoom meetings to help others with CAT preparations
+• Using Reddit for self- improvement and question-solving (nuuvpkq)
+• Checking direct messages (ntv7wu6, ntv5oed, ntukmbf, ntujh8e)
+• Using Google Meet for support and guidance (ntv5oed)
 
 FRUSTRATIONS
 --------------------
-• Difficulty in converting XLRI due to bad acads and average GDPI
-• Panic and ego in XAT
+• Time management and procrastination (ntvyqcz)
+• Inconsistent scores in mocks (nup9lhc, nup8zek)
 
 GOALS & NEEDS
 --------------------
-• To achieve a good percentile in XAT
-• To improve decision-making and accuracy in QA sections
+• Increasing accuracy in Decision Making (post_1ploz5j)
+• Improving Quantitative Aptitude (post_1ploz5j, ntujh8e)
 
 KEY QUOTE
 --------------------
-"CAT punishes indecision. XAT punishes panic and ego."
+"“You don’t need many attempts in XAT QA. Even 8-9 correct attempts are enough if you avoid wasting time.” (ntujh8e)"

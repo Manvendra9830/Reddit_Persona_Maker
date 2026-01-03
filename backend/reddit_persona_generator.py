@@ -184,46 +184,117 @@ class PersonaAnalyzer:
             content_text = content_text[:8000] + "\n... (content truncated)"
 
         prompt = f"""
-        Analyze the following Reddit posts and comments to create a detailed user persona. 
-        Based on the content, extract information about:
+        Analyze the following Reddit posts and comments to create a detailed, evidence-based user persona. 
+        Your analysis MUST be grounded in the provided text. Do NOT speculate or use phrases like "possibly" or "might be". 
+        If evidence for a field is not present, omit the field entirely.
 
-        1. Demographics (age, occupation, location, relationship status)
-        2. Personality traits on scales of 1-10:
-           - Introvert (1) vs Extrovert (10)
-           - Intuition (1) vs Sensing (10)
-           - Feeling (1) vs Thinking (10)
-           - Perceiving (1) vs Judging (10)
-        3. Motivations (rate 1-10): convenience, wellness, speed, preferences, comfort, dietary_needs
-        4. Behavioral patterns and habits
-        5. Frustrations and pain points
-        6. Goals and needs
-        7. A key quote that represents the user (pick from their actual content)
-        8. User archetype (e.g., "The Creator", "The Explorer", "The Caregiver")
-        9. User tier (e.g., "Early Adopter", "Mainstream", "Laggard")
-
-        For each characteristic (like age, occupation, frustrations, etc), you MUST list the exact post/comment IDs used from the provided content. 
-        DO NOT guess or leave them empty unless absolutely no supporting content exists.
-        Ensure the 'citations' field is present and includes at least one matching ID for each non-empty characteristic.
+        For EACH characteristic (e.g., age, occupation, a specific habit), you MUST provide citations from the user's content.
+        A citation MUST include the `post_id` or `comment_id`.
 
         Content to analyze:
         {content_text}
 
-        IMPORTANT: Respond ONLY in valid JSON format with the following structure:
-        {{
-            "demographics": {{"age": "estimated age range", "occupation": "likely occupation", "location": "location if mentioned", "status": "relationship status", "tier": "user tier", "archetype": "user archetype"}},
-            "personality": {{"introvert_extrovert": 5, "intuition_sensing": 5, "feeling_thinking": 5, "perceiving_judging": 5}},
-            "motivations": {{"convenience": 5, "wellness": 5, "speed": 5, "preferences": 5, "comfort": 5, "dietary_needs": 5}},
-            "behavior_habits": ["habit 1", "habit 2"],
-            "frustrations": ["frustration 1", "frustration 2"],
-            "goals_needs": ["goal 1", "goal 2"],
-            "key_quote": "representative quote from their content",
-            "citations": {{"age": ["post_id_1", "comment_id_2"], "occupation": ["post_id_3"], "location": ["comment_id_4"], "status": ["post_id_5"], "tier": ["comment_id_6"], "archetype": ["post_id_7"], "behavior_habits": ["post_id_8"], "frustrations": ["comment_id_9"], "goals_needs": ["post_id_10"], "key_quote": ["comment_id_11"]}}
-        }}
-        """
+                IMPORTANT: Respond ONLY in valid JSON format with the following structure.
+
+                EVERY field in the JSON response that is not empty MUST have a corresponding citation.
+
+                For each citation, include the content snippet (up to 200 characters) from the original Reddit post/comment that directly supports the claim.
+
+        
+
+                {{
+
+                    "demographics": {{"age": "estimated age range", "occupation": "likely occupation", "location": "location if mentioned", "status": "relationship status", "tier": "user tier", "archetype": "user archetype"}},
+
+                    "personality": {{"introvert_extrovert": 5, "intuition_sensing": 5, "feeling_thinking": 5, "perceiving_judging": 5}},
+
+                    "motivations": {{"convenience": 5, "wellness": 5, "speed": 5, "preferences": 5, "comfort": 5, "dietary_needs": 5}},
+
+                    "behavior_habits": ["habit 1", "habit 2"],
+
+                    "frustrations": ["frustration 1", "frustration 2"],
+
+                    "goals_needs": ["goal 1", "goal 2"],
+
+                    "key_quote": "representative quote from their content",
+
+                    "citations": {{
+
+                        "age": [
+
+                            {{"id": "post_id_1", "content_snippet": "Relevant text from post 1 (max 200 chars)"}},
+
+                            {{"id": "comment_id_2", "content_snippet": "Relevant text from comment 2 (max 200 chars)"}}
+
+                        ],
+
+                        "occupation": [
+
+                            {{"id": "post_id_3", "content_snippet": "Relevant text from post 3 (max 200 chars)"}}
+
+                        ],
+
+                        "location": [
+
+                            {{"id": "comment_id_4", "content_snippet": "Relevant text from comment 4 (max 200 chars)"}}
+
+                        ],
+
+                        "status": [
+
+                            {{"id": "post_id_5", "content_snippet": "Relevant text from post 5 (max 200 chars)"}}
+
+                        ],
+
+                        "tier": [
+
+                            {{"id": "comment_id_6", "content_snippet": "Relevant text from comment 6 (max 200 chars)"}}
+
+                        ],
+
+                        "archetype": [
+
+                            {{"id": "post_id_7", "content_snippet": "Relevant text from post 7 (max 200 chars)"}}
+
+                        ],
+
+                        "behavior_habits": [
+
+                            {{"id": "post_id_8", "content_snippet": "Relevant text from post 8 (max 200 chars)"}},
+
+                            {{"id": "comment_id_9", "content_snippet": "Relevant text from comment 9 (max 200 chars)"}}
+
+                        ],
+
+                        "frustrations": [
+
+                            {{"id": "comment_id_10", "content_snippet": "Relevant text from comment 10 (max 200 chars)"}}
+
+                        ],
+
+                        "goals_needs": [
+
+                            {{"id": "post_id_11", "content_snippet": "Relevant text from post 11 (max 200 chars)"}}
+
+                        ],
+
+                        "key_quote": [
+
+                            {{"id": "comment_id_12", "content_snippet": "Relevant text from comment 12 (max 200 chars)"}}
+
+                        ]
+
+                    }}
+
+                }}
+
+                """
 
         try:
-            response = self._get_groq_response(prompt)
-            response = self._clean_json_response(response)
+            raw_llm_response = self._get_groq_response(prompt)
+            print("DEBUG: Raw LLM Response:", raw_llm_response)
+            response = self._clean_json_response(raw_llm_response)
+            print("DEBUG: Cleaned JSON Response:", response)
             analysis = json.loads(response)
             return self._create_persona_from_analysis(analysis, all_content)
         except Exception as e:
@@ -261,6 +332,11 @@ class PersonaAnalyzer:
         """Clean up the response to extract valid JSON."""
         response = re.sub(r"```json\s*", "", response, flags=re.IGNORECASE)
         response = re.sub(r"```\s*$", "", response)
+
+        # Remove single-line JavaScript-style comments (// ...)
+        response = re.sub(r"//.*", "", response)
+
+        # Remove trailing commas
         response = re.sub(r",\s*([\}\]])", r"\1", response)
 
         # Find the first '{' and the last '}' to extract the JSON object
@@ -272,8 +348,9 @@ class PersonaAnalyzer:
         return response
 
     def _create_persona_from_analysis(self, analysis: Dict, content: List[Dict]) -> UserPersona:
-        """Create UserPersona object from analysis results."""
+        """Create UserPersona object from analysis results and correctly parse citations."""
         content_lookup = {item["id"]: item for item in content}
+
         demographics = analysis.get("demographics", {})
         personality = analysis.get("personality", {})
         motivations = analysis.get("motivations", {})
@@ -302,25 +379,31 @@ class PersonaAnalyzer:
             key_quote=analysis.get("key_quote"),
         )
 
-        citations = {}
+        # --- Custom Citation Parsing Logic ---
+        persona.citations = {}
         citation_data = analysis.get("citations", {})
-        for field, cited_ids in citation_data.items():
-            citations[field] = []
-            if isinstance(cited_ids, list):
-                for cited_id in cited_ids:
-                    if cited_id in content_lookup:
-                        item = content_lookup[cited_id]
-                        citations[field].append(Citation(
-                            post_id=cited_id,
-                            post_type=item["type"],
-                            content=item.get("content", item.get("title", ""))[:200] + "...",
-                            subreddit=item["subreddit"],
-                            timestamp=datetime.fromtimestamp(item["created_utc"]).strftime("%Y-%m-%d"),
-                            url=item["url"],
-                        ))
-        persona.citations = citations
-        return persona
 
+        for field, citations_list_from_llm in citation_data.items():
+            if isinstance(citations_list_from_llm, list):
+                persona.citations[field] = []
+                for citation_item in citations_list_from_llm:
+                    if isinstance(citation_item, dict) and "id" in citation_item and "content_snippet" in citation_item:
+                        actual_id = str(citation_item["id"]).replace("post_id_", "").replace("comment_id_", "")
+                        content_snippet = citation_item["content_snippet"]
+
+                        if actual_id in content_lookup:
+                            item = content_lookup[actual_id]
+                            persona.citations[field].append(Citation(
+                                post_id=actual_id,
+                                post_type=item["type"],
+                                content=content_snippet, # Use the content_snippet provided by the LLM
+                                subreddit=item["subreddit"],
+                                timestamp=datetime.fromtimestamp(item["created_utc"]).strftime("%Y-%m-%d"),
+                                url=item["url"],
+                            ))
+        # --- End Custom Citation Parsing Logic ---
+
+        return persona
 
 class PersonaFormatter:
     """Formats persona data for output."""
