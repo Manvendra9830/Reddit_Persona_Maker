@@ -16,15 +16,12 @@ app = FastAPI()
 
 # CORS configuration to allow frontend requests from Vercel and localhost
 # FastAPI does not support wildcard domains in `allow_origins`, so we use a regex.
-origins_regex = r"https://.*\.vercel\.app"
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_origin_regex=origins_regex,
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allow all methods (POST, GET, OPTIONS, etc.)
+    allow_headers=["*"],  # Allow all headers
 )
 
 class AnalyzeRequest(BaseModel):
