@@ -555,8 +555,38 @@ class PersonaFormatter:
                 output.append(f"     {citation.url}\n")
 
 
+def generate_persona(username: str, model_name: str) -> dict:
+    """
+    Generates a user persona for the given username.
+    This function contains the core logic and is designed to be callable from other scripts.
+    """
+    scraper = RedditScraper()
+    analyzer = PersonaAnalyzer(model_name=model_name)
+
+    print("1. Scraping user posts and comments...")
+    posts, comments = scraper.get_user_content(username)
+
+    if not posts and not comments:
+        return {
+            "has_activity": False,
+            "message": f"No usable content found for user {username}. Exiting."
+        }
+
+    print(f"   Found {len(posts)} posts and {len(comments)} comments with content.")
+
+    print("2. Analyzing content with LLM...")
+    persona_obj = analyzer.analyze_content(posts, comments)
+    persona_obj.username = username
+    
+    # We need both the object (for file formatting) and the dict (for API)
+    return {
+        "has_activity": True,
+        "persona_obj": persona_obj,
+        "persona_dict": asdict(persona_obj)
+    }
+
 def main():
-    """Main function to run the persona generator."""
+    """Main function to run the persona generator from the command line."""
     if len(sys.argv) < 2:
         print("Usage: python backend/reddit_persona_generator.py <reddit_username> [model_name]")
         print("Example: python backend/reddit_persona_generator.py spez llama-3.1-8b-instant")
@@ -568,25 +598,15 @@ def main():
 
     print(f"Generating persona for Reddit user: {username} using Groq model: {model_name}")
     print("=" * 50)
+    
+    result = generate_persona(username, model_name)
 
-    scraper = RedditScraper()
-    analyzer = PersonaAnalyzer(model_name=model_name)
-
-    print("1. Scraping user posts and comments...")
-    posts, comments = scraper.get_user_content(username)
-
-    if not posts and not comments:
-        print(f"No usable content found for user {username}. Exiting.")
+    if not result["has_activity"]:
+        print(result["message"])
         sys.exit(0)
 
-    print(f"   Found {len(posts)} posts and {len(comments)} comments with content.")
-
-    print("2. Analyzing content with LLM...")
-    persona = analyzer.analyze_content(posts, comments)
-    persona.username = username
-
     print("3. Generating persona report...")
-    formatted_output = PersonaFormatter.format_persona_to_text(persona)
+    formatted_output = PersonaFormatter.format_persona_to_text(result["persona_obj"])
 
     output_filename = f"{username}_persona_groq.txt"
     with open(output_filename, "w", encoding="utf-8") as f:
