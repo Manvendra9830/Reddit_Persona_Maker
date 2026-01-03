@@ -1,0 +1,47 @@
+============================================================
+USER PERSONA: SPEZ
+============================================================
+
+DEMOGRAPHICS
+--------------------
+Age: likely 30s-40s
+Occupation: CEO/Founder of Reddit
+Status: not mentioned
+Location: not mentioned
+Tier: Early Adopter
+Archetype: The Creator
+
+PERSONALITY TRAITS
+--------------------
+Introvert/Extrovert: Extrovert (6/10)
+Intuition/Sensing: Sensing (6/10)
+Feeling/Thinking: Feeling (5/10)
+Perceiving/Judging: Judging (6/10)
+
+MOTIVATIONS
+--------------------
+Convenience: 8/10
+Wellness: 4/10
+Speed: 7/10
+Preferences: 9/10
+Comfort: 6/10
+Dietary Needs: 2/10
+
+BEHAVIOR & HABITS
+--------------------
+• regularly engages with community
+• frequently posts updates about Reddit's development
+
+FRUSTRATIONS
+--------------------
+• dealing with spam and heavy attacks on the site
+• balancing community needs with business goals
+
+GOALS & NEEDS
+--------------------
+• to keep Reddit a space for open discussion and community engagement
+• to improve the site's functionality and user experience
+
+KEY QUOTE
+--------------------
+"Maybe the perfect chives were the friends we made along the way."
