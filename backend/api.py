@@ -4,6 +4,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import re
+from groq import Groq # Add Groq import for warm-up call
 
 # Add the directory containing this script to the sys.path
 # This allows importing reddit_persona_generator
@@ -23,6 +24,28 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all methods (POST, GET, OPTIONS, etc.)
     allow_headers=["*"],  # Allow all headers
 )
+
+# D) Cold Start Warm-up Strategy
+@app.on_event("startup")
+def startup_event():
+    print("API Startup: Running cold start warm-up...")
+    try:
+        # Initialize Groq client (requires GROQ_API_KEY from env)
+        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        
+        # Perform a harmless, cached LLM call with fixed text
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "user", "content": "hello"}
+            ],
+            model="llama-3.1-8b-instant", # Using a common, fast Groq model for warm-up
+            temperature=0.1, # Low temperature for consistent, fast response
+            max_tokens=10, # Keep response very short
+        )
+        print(f"API Warm-up successful: {chat_completion.choices[0].message.content}")
+    except Exception as e:
+        print(f"API Warm-up failed: {e}")
+    print("API Startup: Cold start warm-up complete.")
 
 class AnalyzeRequest(BaseModel):
     username: str

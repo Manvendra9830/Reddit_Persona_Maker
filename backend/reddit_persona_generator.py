@@ -97,62 +97,45 @@ class RedditScraper:
         self, username: str, limit: int = 100
     ) -> Tuple[List[Dict], List[Dict]]:
         """
-        Scrape user's posts and comments with robust filtering.
-
-        Args:
-            username: Reddit username
-            limit: Maximum number of items to scrape
-
-        Returns:
-            Tuple of (posts, comments)
+        Scrape user's posts and comments with robust filtering and deterministic ordering.
         """
         try:
             user = self.reddit.redditor(username)
+            
+            # Fetch a combined list of posts and comments, sort by newest first
+            combined_content = list(user.submissions.new(limit=limit)) + list(user.comments.new(limit=limit))
+            combined_content.sort(key=lambda x: x.created_utc, reverse=True)
 
-            # Get posts
             posts = []
-            for submission in user.submissions.new(limit=limit):
-                # Filter out deleted/removed posts and those without meaningful content
-                if (
-                    submission.selftext
-                    and submission.selftext.strip() not in ["[deleted]", "[removed]"]
-                    and submission.selftext.strip()
-                    and not getattr(submission, 'removed_by_category', False)
-                ):
-                    posts.append(
-                        {
-                            "id": submission.id,
-                            "title": submission.title,
-                            "content": submission.selftext,
-                            "subreddit": str(submission.subreddit),
-                            "score": submission.score,
-                            "created_utc": submission.created_utc,
-                            "url": f"https://reddit.com{submission.permalink}",
-                            "type": "post",
-                        }
-                    )
-
-            # Get comments
             comments = []
-            for comment in user.comments.new(limit=limit):
-                # Filter out deleted/removed comments and those without meaningful content
-                if (
-                    comment.body
-                    and comment.body.strip() not in ["[deleted]", "[removed]"]
-                    and comment.body.strip()
-                    and comment.author
-                ):
-                    comments.append(
-                        {
-                            "id": comment.id,
-                            "content": comment.body,
-                            "subreddit": str(comment.subreddit),
-                            "score": comment.score,
-                            "created_utc": comment.created_utc,
-                            "url": f"https://reddit.com{comment.permalink}",
+            
+            for item in combined_content[:limit]: # Enforce combined limit
+                if isinstance(item, praw.models.Submission):
+                    if (
+                        item.selftext
+                        and item.selftext.strip() not in ["[deleted]", "[removed]"]
+                        and item.selftext.strip()
+                        and not getattr(item, 'removed_by_category', False)
+                    ):
+                        posts.append({
+                            "id": item.id, "title": item.title, "content": item.selftext,
+                            "subreddit": str(item.subreddit), "score": item.score,
+                            "created_utc": item.created_utc, "url": f"https://reddit.com{item.permalink}",
+                            "type": "post",
+                        })
+                elif isinstance(item, praw.models.Comment):
+                    if (
+                        item.body
+                        and item.body.strip() not in ["[deleted]", "[removed]"]
+                        and item.body.strip()
+                        and item.author
+                    ):
+                        comments.append({
+                            "id": item.id, "content": item.body,
+                            "subreddit": str(item.subreddit), "score": item.score,
+                            "created_utc": item.created_utc, "url": f"https://reddit.com{item.permalink}",
                             "type": "comment",
-                        }
-                    )
+                        })
 
             return posts, comments
 
@@ -184,117 +167,75 @@ class PersonaAnalyzer:
             content_text = content_text[:8000] + "\n... (content truncated)"
 
         prompt = f"""
-        Analyze the following Reddit posts and comments to create a detailed, evidence-based user persona. 
-        Your analysis MUST be grounded in the provided text. Do NOT speculate or use phrases like "possibly" or "might be". 
-        If evidence for a field is not present, omit the field entirely.
+        You are a data analysis engine. Your task is to analyze the provided Reddit content and generate a user persona.
 
-        For EACH characteristic (e.g., age, occupation, a specific habit), you MUST provide citations from the user's content.
-        A citation MUST include the `post_id` or `comment_id`.
+        **CRITICAL INSTRUCTIONS:**
+        1.  **JSON ONLY:** Your entire output MUST be a single, valid JSON object. It must start with `{{` and end with `}}`. Do NOT include markdown, headings, explanations, apologies, or any text outside of the JSON structure.
+        2.  **STRICT SCHEMA:** The JSON object MUST conform to the structure shown in the example below. Do NOT add or remove keys.
+        3.  **EVIDENCE-BACKED INFERENCE:** You are to make reasonable inferences for demographic fields (`age`, `occupation`, `status`, `location`).
+            *   **How to Infer:**
+                *   **Age:** Infer a range (e.g., "20-25") from mentions of university, graduation years, first job, or other life stage indicators.
+                *   **Occupation:** Infer from participation in career-related subreddits (e.g., r/cscareerquestions, r/medicalschool) or discussions about work.
+                *   **Location:** Infer from mentions of cities, states, countries, or region-specific topics (e.g., local sports teams, regional exams).
+            *   **Inference Rules:**
+                *   If strong, explicit evidence exists (e.g., direct statements, clear life-stage indicators), you MUST infer.
+                    If evidence is indirect, generic, or based only on platform participation, you SHOULD return null instead of guessing.
+                *   If weak but reasonable evidence exists, you SHOULD infer and mark it as "(likely)".
+                *   Only use null if there is absolutely no signal after reviewing all content.
+            *   **Benchmark:** Legacy persona quality is the benchmark. Prefer cautious inference over null when evidence exists.
+        4.  **NUMERIC FIELDS:** All fields in `personality` and `motivations` MUST be integers between 0 and 10 (inclusive). If evidence is weak or non-existent, use `null`.
+        5.  **ARRAYS:** `behavior_habits`, `frustrations`, and `goals_needs` MUST always be arrays, even if they are empty (`[]`).
+        6.  **CITATIONS:** Every non-null claim, including inferred ones, MUST be supported by a citation in the `citations` object. Each citation must be an object containing the `id` of the post/comment and a `content_snippet` (max 200 chars) that justifies the claim.
 
-        Content to analyze:
+        **Analyze this content:**
         {content_text}
 
-                IMPORTANT: Respond ONLY in valid JSON format with the following structure.
-
-                EVERY field in the JSON response that is not empty MUST have a corresponding citation.
-
-                For each citation, include the content snippet (up to 200 characters) from the original Reddit post/comment that directly supports the claim.
-
-        
-
-                {{
-
-                    "demographics": {{"age": "estimated age range", "occupation": "likely occupation", "location": "location if mentioned", "status": "relationship status", "tier": "user tier", "archetype": "user archetype"}},
-
-                    "personality": {{"introvert_extrovert": 5, "intuition_sensing": 5, "feeling_thinking": 5, "perceiving_judging": 5}},
-
-                    "motivations": {{"convenience": 5, "wellness": 5, "speed": 5, "preferences": 5, "comfort": 5, "dietary_needs": 5}},
-
-                    "behavior_habits": ["habit 1", "habit 2"],
-
-                    "frustrations": ["frustration 1", "frustration 2"],
-
-                    "goals_needs": ["goal 1", "goal 2"],
-
-                    "key_quote": "representative quote from their content",
-
-                    "citations": {{
-
-                        "age": [
-
-                            {{"id": "post_id_1", "content_snippet": "Relevant text from post 1 (max 200 chars)"}},
-
-                            {{"id": "comment_id_2", "content_snippet": "Relevant text from comment 2 (max 200 chars)"}}
-
-                        ],
-
-                        "occupation": [
-
-                            {{"id": "post_id_3", "content_snippet": "Relevant text from post 3 (max 200 chars)"}}
-
-                        ],
-
-                        "location": [
-
-                            {{"id": "comment_id_4", "content_snippet": "Relevant text from comment 4 (max 200 chars)"}}
-
-                        ],
-
-                        "status": [
-
-                            {{"id": "post_id_5", "content_snippet": "Relevant text from post 5 (max 200 chars)"}}
-
-                        ],
-
-                        "tier": [
-
-                            {{"id": "comment_id_6", "content_snippet": "Relevant text from comment 6 (max 200 chars)"}}
-
-                        ],
-
-                        "archetype": [
-
-                            {{"id": "post_id_7", "content_snippet": "Relevant text from post 7 (max 200 chars)"}}
-
-                        ],
-
-                        "behavior_habits": [
-
-                            {{"id": "post_id_8", "content_snippet": "Relevant text from post 8 (max 200 chars)"}},
-
-                            {{"id": "comment_id_9", "content_snippet": "Relevant text from comment 9 (max 200 chars)"}}
-
-                        ],
-
-                        "frustrations": [
-
-                            {{"id": "comment_id_10", "content_snippet": "Relevant text from comment 10 (max 200 chars)"}}
-
-                        ],
-
-                        "goals_needs": [
-
-                            {{"id": "post_id_11", "content_snippet": "Relevant text from post 11 (max 200 chars)"}}
-
-                        ],
-
-                        "key_quote": [
-
-                            {{"id": "comment_id_12", "content_snippet": "Relevant text from comment 12 (max 200 chars)"}}
-
-                        ]
-
-                    }}
-
-                }}
-
-                """
+        **Output ONLY the following JSON structure:**
+        {{
+            "demographics": {{
+                "age": "string | null",
+                "occupation": "string | null",
+                "status": "string | null",
+                "location": "string | null",
+                "tier": "string | null",
+                "archetype": "string | null"
+            }},
+            "personality": {{
+                "introvert_extrovert": "integer | null",
+                "intuition_sensing": "integer | null",
+                "feeling_thinking": "integer | null",
+                "perceiving_judging": "integer | null"
+            }},
+            "motivations": {{
+                "convenience": "integer | null",
+                "wellness": "integer | null",
+                "speed": "integer | null",
+                "preferences": "integer | null",
+                "comfort": "integer | null",
+                "dietary_needs": "integer | null"
+            }},
+            "behavior_habits": ["string"],
+            "frustrations": ["string"],
+            "goals_needs": ["string"],
+            "key_quote": "string | null",
+            "citations": {{
+                "age": [{{ "id": "string", "content_snippet": "string" }}],
+                "occupation": [{{ "id": "string", "content_snippet": "string" }}],
+                "status": [{{ "id": "string", "content_snippet": "string" }}],
+                "location": [{{ "id": "string", "content_snippet": "string" }}],
+                "tier": [{{ "id": "string", "content_snippet": "string" }}],
+                "archetype": [{{ "id": "string", "content_snippet": "string" }}],
+                "behavior_habits": [{{ "id": "string", "content_snippet": "string" }}],
+                "frustrations": [{{ "id": "string", "content_snippet": "string" }}],
+                "goals_needs": [{{ "id": "string", "content_snippet": "string" }}],
+                "key_quote": [{{ "id": "string", "content_snippet": "string" }}]
+            }}
+        }}
+        """
 
         try:
             raw_llm_response = self._get_groq_response(prompt)
-            print("DEBUG: Raw LLM Response:", raw_llm_response)
             response = self._clean_json_response(raw_llm_response)
-            print("DEBUG: Cleaned JSON Response:", response)
             analysis = json.loads(response)
             return self._create_persona_from_analysis(analysis, all_content)
         except Exception as e:
@@ -402,6 +343,29 @@ class PersonaAnalyzer:
                                 url=item["url"],
                             ))
         # --- End Custom Citation Parsing Logic ---
+
+        # B) Numeric Field Normalization (CRITICAL)
+        numeric_fields = [
+            "introvert_extrovert", "intuition_sensing", "feeling_thinking", "perceiving_judging",
+            "convenience", "wellness", "speed", "preferences", "comfort", "dietary_needs"
+        ]
+        default_value = 4
+
+        for field in numeric_fields:
+            current_value = getattr(persona, field)
+            
+            # If value is null/None, replace with default
+            if current_value is None:
+                setattr(persona, field, default_value)
+            else:
+                # Ensure it's an integer and clamp values between 0 and 10
+                try:
+                    int_value = int(current_value)
+                    clamped_value = max(0, min(10, int_value))
+                    setattr(persona, field, clamped_value)
+                except (ValueError, TypeError):
+                    # Fallback if the value is not a valid number
+                    setattr(persona, field, default_value)
 
         return persona
 
@@ -566,10 +530,10 @@ def generate_persona(username: str, model_name: str) -> dict:
     print("1. Scraping user posts and comments...")
     posts, comments = scraper.get_user_content(username)
 
-    if not posts and not comments:
+    if (len(posts) + len(comments)) < 5: # MINIMUM threshold check
         return {
             "has_activity": False,
-            "message": f"No usable content found for user {username}. Exiting."
+            "message": "Insufficient public activity for reliable persona generation."
         }
 
     print(f"   Found {len(posts)} posts and {len(comments)} comments with content.")
