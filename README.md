@@ -5,7 +5,7 @@ This project is an AI-powered tool that analyzes a Reddit user's public activity
 ## Deployed Applications
 
 *   **Frontend (Vercel):** [Application](https://redditpersonamaker.vercel.app/)
-*   **Backend (Render):** [https://reddit-persona-maker-new.onrender.com/docs](https://reddit-persona-maker-new.onrender.com/docs)
+*   **Backend (Render):** [Backend-Service](https://reddit-persona-maker-new.onrender.com/docs)
 
 ## Monorepo Structure
 
