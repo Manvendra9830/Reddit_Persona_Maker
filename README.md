@@ -1,13 +1,10 @@
 # Reddit Persona Generator
 
-[![Frontend CI/CD](https://github.com/Manvendra9830/Reddit_Persona_Maker/actions/workflows/frontend-ci-cd.yml/badge.svg)](https://github.com/Manvendra9830/Reddit_Persona_Maker/actions/workflows/frontend-ci-cd.yml)
-[![Backend CI/CD](https://github.com/Manvendra9830/Reddit_Persona_Maker/actions/workflows/backend-ci-cd.yml/badge.svg)](https://github.com/Manvendra9830/Reddit_Persona_Maker/actions/workflows/backend-ci-cd.yml)
-
 This project is an AI-powered tool that analyzes a Reddit user's public activity and automatically generates a detailed personality and behavioral profile.
 
 ## Deployed Applications
 
-*   **Frontend (Vercel):** [https://redditpersonamaker.vercel.app/](https://redditpersonamaker.vercel.app/)
+*   **Frontend (Vercel):** [Application](https://redditpersonamaker.vercel.app/)
 *   **Backend (Render):** [https://reddit-persona-maker-new.onrender.com/docs](https://reddit-persona-maker-new.onrender.com/docs)
 
 ## Monorepo Structure
