@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { LoadingState } from "@/components/LoadingState";
 import { Search, User, AlertCircle, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-const API_BASE_URL = "https://reddit-persona-maker-new.onrender.com";  
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;  
 
 interface ApiResponse {
   username: string;
