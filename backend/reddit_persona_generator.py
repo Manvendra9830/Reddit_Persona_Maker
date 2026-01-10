@@ -111,14 +111,16 @@ class RedditScraper:
             
             for item in combined_content[:limit]: # Enforce combined limit
                 if isinstance(item, praw.models.Submission):
+                    # Use title as content if selftext is empty
+                    content_to_check = item.selftext or item.title
+                    
                     if (
-                        item.selftext
-                        and item.selftext.strip() not in ["[deleted]", "[removed]"]
-                        and item.selftext.strip()
+                        content_to_check.strip()
+                        and content_to_check.strip() not in ["[deleted]", "[removed]"]
                         and not getattr(item, 'removed_by_category', False)
                     ):
                         posts.append({
-                            "id": item.id, "title": item.title, "content": item.selftext,
+                            "id": item.id, "title": item.title, "content": content_to_check,
                             "subreddit": str(item.subreddit), "score": item.score,
                             "created_utc": item.created_utc, "url": f"https://reddit.com{item.permalink}",
                             "type": "post",
